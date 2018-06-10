@@ -15,6 +15,7 @@ pip3 install djangorestframework
 
 version: settings/urls/views/
 
+其中`DEFAULT_VERSIONING_CLASS`是为了全局生效，不然要在每个视图函数定义`versioning_class`
 ```
 #settings.py
 INSTALLED_APPS = [
@@ -22,7 +23,7 @@ INSTALLED_APPS = [
     'rest_framework',  # 友好显示TemplateDoesNotExist报错
 ]
 REST_FRAMEWORK = {
-    'DEFAULT_VERSIONING_CLASS':'rest_framework.versioning.URLPathVersioning',  # 为了全局生效，不然要在每个视图函数定义`versioning_class`
+    'DEFAULT_VERSIONING_CLASS':'rest_framework.versioning.URLPathVersioning',  # 全局生效
     'ALLOWED_VERSIONS':['v1','v2'],
     'DEFAULT_VERSION':'v1',
 }
@@ -49,7 +50,7 @@ from rest_framework.views import APIView
 from rest_framework.versioning import URLPathVersioning,QueryParameterVersioning
 
 class UserView(APIView):
-    #versioning_class = URLPathVersioning
+    #versioning_class = URLPathVersioning  # 局部生效
     # versioning_class = QueryParameterVersioning
 
     def get(self,request,*args,**kwargs):
