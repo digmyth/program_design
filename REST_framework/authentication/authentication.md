@@ -18,6 +18,18 @@ class APIView(View):
         """
         request.user
 ```
+```
+class APIView(View):
+    def perform_authentication(self, request):
+        """
+        Perform authentication on the incoming request.
+
+        Note that if you override this and simply 'pass', then authentication
+        will instead be performed lazily, the first time either
+        `request.user` or `request.auth` is accessed.
+        """
+        request.user
+```
 
 ```
 class Request(object):
