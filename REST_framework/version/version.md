@@ -193,13 +193,14 @@ def determine_version(self, request, *args, **kwargs):
 
 `APIView`类中可看到`framework`全局可定义变量
 ```
-# The following policies may be set at either globally, or per-view.
-renderer_classes = api_settings.DEFAULT_RENDERER_CLASSES
-parser_classes = api_settings.DEFAULT_PARSER_CLASSES
-authentication_classes = api_settings.DEFAULT_AUTHENTICATION_CLASSES
-throttle_classes = api_settings.DEFAULT_THROTTLE_CLASSES
-permission_classes = api_settings.DEFAULT_PERMISSION_CLASSES
-content_negotiation_class = api_settings.DEFAULT_CONTENT_NEGOTIATION_CLASS
-metadata_class = api_settings.DEFAULT_METADATA_CLASS
-versioning_class = api_settings.DEFAULT_VERSIONING_CLASS
+class APIView(View):
+    # The following policies may be set at either globally, or per-view.
+    renderer_classes = api_settings.DEFAULT_RENDERER_CLASSES
+    parser_classes = api_settings.DEFAULT_PARSER_CLASSES
+    authentication_classes = api_settings.DEFAULT_AUTHENTICATION_CLASSES
+    throttle_classes = api_settings.DEFAULT_THROTTLE_CLASSES
+    permission_classes = api_settings.DEFAULT_PERMISSION_CLASSES
+    content_negotiation_class = api_settings.DEFAULT_CONTENT_NEGOTIATION_CLASS
+    metadata_class = api_settings.DEFAULT_METADATA_CLASS
+    versioning_class = api_settings.DEFAULT_VERSIONING_CLASS
 ```
