@@ -207,7 +207,7 @@ class APIView(View):
 
 ### 三、总结
 * CBV入口在self.dispatch
-* 配置文件定义`'DEFAULT_VERSIONING_CLASS':'rest_framework.versioning.URLPathVersioning'
+* 配置文件定义`'DEFAULT_VERSIONING_CLASS':'rest_framework.versioning.URLPathVersioning'`
 * `urls.py`定义`url(r'^user/$', views.UserView.as_view()),`
 * 视图继承`class UserView(APIView)`
 * 出现未定义的版本报错友好显示在templates模板里，为了能找到模板，settings.py里注册`rest_framework`app
