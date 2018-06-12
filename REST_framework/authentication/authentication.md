@@ -46,3 +46,4 @@ class Request(object):
 ```
 
 ### 三、总结
+cobbler system add --name=wxqxx --hostname=wxq.com --mac=00:0C:29:D1:78:E9 --ip-address=172.16.10.200 --profile=Suse11_sp4-i386 --interface=eth0cobbler system add --name=wxqxx --hostname=wxq.com --mac=00:0C:29:D1:78:E9 --ip-address=172.16.10.200 --profile=Suse11_sp4-i386 --interface=eth0
