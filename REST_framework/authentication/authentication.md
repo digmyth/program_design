@@ -38,6 +38,9 @@ class UserView(APIView):
 ```
 
 我们来看一下rest_framework是如何实现TOKEN认证的
+
+
+自己写一个认证类MyAuthentication
 ```
 # urls.py
 from django.shortcuts import render,HttpResponse
@@ -61,12 +64,18 @@ class MyAuthentication(BaseAuthentication):  # 自己写一个认证类
             return ('wxq','xxxx')
 ```
 
+在视图里用上MyAuthentication认证类
 ```
 # urls.py
 class UserView(APIView):
     authentication_classes = [MyAuthentication,]    # 让视图用起来
     def get(self,request, *args,**kwargs):
         return HttpResponse('user.get')
+```
+
+这样用户发送请求就必须带上token(或URL/?token=xxx,或在请求体里)
+```
+http://127.0.0.1:8000/api/user/?token=sdf
 ```
 
 
