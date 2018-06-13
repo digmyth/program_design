@@ -114,11 +114,24 @@ class AuthView(APIView):
 
         token = str(uuid4())
         response['token'] = token
-        models.UserToken.objects.update_or_create(user=user_obj,defaults={'token':token})
-
+        models.UserToken.objects.update_or_create(user=user_obj,defaults={'token':token}) # 验证成功token写入数据库
+        # 并把token返回给用户，便于下次携带上
         return JsonResponse(response,json_dumps_params={'ensure_ascii':False})
 ```
 
+requests模拟post请求看看效果
+```
+# test.py
+import requests
+
+ret = requests.post(
+    url='http://127.0.0.1:8000/api/auth/',
+    json={'username':'wxq','password':123},
+    headers={'Content-Type':'application/json'},
+    )
+
+print(ret.text)
+```
 
 
 
