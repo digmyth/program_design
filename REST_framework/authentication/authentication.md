@@ -80,6 +80,7 @@ http://127.0.0.1:8000/api/user/?token=sdf
 
 如果有基于数据库的用户名、密码认证系统，post过来登录成功那一刻就为用户生成token,
 ```
+# models.py
 from django.db import models
 
 class UserInfo(models.Model):
@@ -90,6 +91,40 @@ class UserToken(models.Model):
     user = models.OneToOneField('UserInfo')
     token = models.CharField(max_length=64)
 ```
+
+有一个对应视图
+```
+url(r'^auth/', views.AuthView.as_view()),
+```
+
+视图函数代码
+```
+# urls.py
+class AuthView(APIView):
+    def post(self,request,*args,**kwargs):
+        response = {'code':1000}
+        user = request.data.get('username')
+        pwd = request.data.get('password')
+
+        user_obj = models.UserInfo.objects.filter(username=user,password=pwd).first()
+        if not user_obj:
+            response['code'] = 10001
+            response['msg'] = '用户名或密码错误'
+            return JsonResponse(response,json_dumps_params={'ensure_ascii':False})
+
+        token = str(uuid4())
+        response['token'] = token
+        models.UserToken.objects.update_or_create(user=user_obj,defaults={'token':token})
+
+        return JsonResponse(response,json_dumps_params={'ensure_ascii':False})
+```
+
+
+
+
+
+
+
 
 
 
