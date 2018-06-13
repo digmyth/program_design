@@ -39,8 +39,34 @@ class UserView(APIView):
 
 我们来看一下rest_framework是如何实现TOKEN认证的
 ```
+# urls.py
+from django.shortcuts import render,HttpResponse
+from rest_framework.views import APIView
+from rest_framework.authentication import BaseAuthentication
+from rest_framework.exceptions import AuthenticationFailed
 
+class MyAuthentication(BaseAuthentication):  # 自己写一个认证类
+    def authenticate(self, request):
+        '''
+        :param request:
+        :return:
+        (user,auth_obj) 表示认证成功，并将分别赋值给request.user,request.auth
+        raise AuthenticationFailed('认证失败') 表示认证失败
+        None 表示匿名用户
+        '''
+        token = request.query_params.get('token')
+        if not token:
+            raise AuthenticationFailed('认证失败')
+        else:
+            return ('wxq','xxxx')
+```
 
+```
+# urls.py
+class UserView(APIView):
+    authentication_classes = [MyAuthentication,]    # 让视图用起来
+    def get(self,request, *args,**kwargs):
+        return HttpResponse('user.get')
 ```
 
 
