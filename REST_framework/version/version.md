@@ -55,7 +55,7 @@ class UserView(APIView):
     # versioning_class = QueryParameterVersioning
 
     def get(self,request,*args,**kwargs):
-        print(request.version)
+        print(request.version,request.versioning_scheme))
         self.dispatch
         return HttpResponse("user.get")
 
