@@ -14,7 +14,7 @@
 pip3 install djangorestframework
 ```
 
-version: settings/urls/views/
+version:配置流 settings.py-->urls.py -->views.py
 
 其中`DEFAULT_VERSIONING_CLASS`是为了全局生效，不然要在每个视图函数定义`versioning_class`
 ```
@@ -40,7 +40,7 @@ urlpatterns = [
 ]
 ```
 
-之初写的CBV都是继承`from rest_framework.views import  View`的View,用了framework后就继承`from rest_framework.views import  APIView`的APIView，那么视图就变成了如下
+之初写的CBV都是继承`from django.views import View` 或 `from rest_framework.views import  View`的View,用了framework后就继承`from rest_framework.views import  APIView`的APIView，那么视图就变成了如下
 ```
 # views.py
 # pip3  install djangorestframework
