@@ -176,7 +176,7 @@ class MyAuthentication(BaseAuthentication):
         return (token_obj.user.username,token_obj)
 ```
 
-完整示例代码参见[]()
+[完整示例代码参见](https://github.com/digmyth/program_design/tree/master/REST_framework/authentication/xp)
 
 
 ### 二、framework authentication源码解析
