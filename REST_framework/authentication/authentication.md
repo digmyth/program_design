@@ -221,4 +221,6 @@ class Request(object):
 ```
 
 ### 三、总结
-
+ * 用户提供用户名、密码post请求登录，通过后生成token入库并把token返回给用户
+ * 用户携带token进行下一次业务请求，如果设置了authentication_classes,那么取出token取数据库作比对认证
+ * token认证成功请求才真正处理
