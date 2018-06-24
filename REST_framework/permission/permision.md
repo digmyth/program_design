@@ -125,6 +125,6 @@ class APIView(View):
 
 * rest_framework的权限依赖rest_framework的认证
 * rest_framework认证成功后返回认证用户的request.user,request.auth
-* rest_framework认证成功后不返回request.user,request.auth，那么就取不到值`request.auth.user.user_type`，所以用了getattr
-* 权限类必须要有`has_permission`方法，这个方法的返回值为True表示有权限，False表示没有权限
+* rest_framework认证成功后不返回request.user,request.auth，那么就取不到值request.auth.user.user_type，所以用了getattr
+* 权限类必须要有has_permission方法，这个方法的返回值为True表示有权限，False表示没有权限
 
