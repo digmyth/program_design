@@ -26,7 +26,9 @@ class UserToken(models.Model):
 url(r'^salary/$', views.SalaryView.as_view()),
 ```
 
-1.3 权限依赖authentication认证，认证后得到request.user、request.auth,这个request.auth是一个`UserToken`对象，非常有用，request.auth.user就可以跨表UserInfo
+1.3 权限依赖authentication认证，认证后得到request.user、request.auth,这个request.auth是一个`UserToken`对象，非常有用，request.auth.user就可以跨表`UserInfo`,能通过`request.auth.user.user_type`取得用户类型值，这样根据用户类型的不同区分不同的权限
+
+1.4 理论走通了后就可以写权限类了
 
 ```
 from rest_framework.permissions import BasePermission
@@ -49,13 +51,15 @@ class BossPermission(BasePermission):
             if user_type_id > 1:
                 return True
         return False
+```
 
+1.5 把定义的权限类用在业务视图上实现权限区分
+```
 class SalaryView(APIView):
     permission_classes = [UserPermission,BossPermission]
     def get(self,request,*args,**kwargs):
         return HttpResponse("get salary 100W")
 ```
-
 
 
 ### 二、framework permission源码解析
