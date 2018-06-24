@@ -49,10 +49,21 @@ class APIView(View):
         Raises an appropriate exception if the request is not permitted.
         """
         for permission in self.get_permissions():
-            if not permission.has_permission(request, self):
+            # 1.权限对象.has_permission=False表示没有权限
+            if not permission.has_permission(request, self):  # 权限对象必须要有has_permission方法
                 self.permission_denied(
                     request, message=getattr(permission, 'message', None)
                 )
+            # 2.权限对象.has_permission=False=True表示有权限
+```
+
+`self.get_permissions()`是个什么鬼，原来套路一样，是一个权限对象列表
+```
+    def get_permissions(self):
+        """
+        Instantiates and returns the list of permissions that this view requires.
+        """
+        return [permission() for permission in self.permission_classes]
 ```
 
 ### 三、总结
