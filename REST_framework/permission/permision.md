@@ -3,7 +3,7 @@
 
 ### 一、framework permission基本使用
 
-预先定义数据库`models.py`，可以看到不同类型用户其`user_type`值不一样，我们可以根据这个值区分不同权限
+1.1 预先定义数据库`models.py`，可以看到不同类型用户其`user_type`值不一样，我们可以根据这个值区分不同权限
 ```
 from django.db import models
 class UserInfo(models.Model):
@@ -21,12 +21,12 @@ class UserToken(models.Model):
     token = models.CharField(max_length=64)
 ```
 
-路由`http://x.x.x.x/api/v1/salary/?token=xxxxxx`请求到来，用户不同携带的token也不同
+1.2 路由`http://x.x.x.x/api/v1/salary/?token=xxxxxx`请求到来，用户不同携带的token也不同
 ```
 url(r'^salary/$', views.SalaryView.as_view()),
 ```
 
-权限依赖authentication认证，认证后得到request.user、request.auth,这个request.auth是一个`UserToken`对象，非常有用，request.auth.user就可以跨表UserInfo
+1.3 权限依赖authentication认证，认证后得到request.user、request.auth,这个request.auth是一个`UserToken`对象，非常有用，request.auth.user就可以跨表UserInfo
 
 ```
 from rest_framework.permissions import BasePermission
