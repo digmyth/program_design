@@ -181,6 +181,74 @@ class MyAuthentication(BaseAuthentication):
 
 ### 二、framework authentication源码解析
 
+在rest_framework version源码分析中CBV我们明白了请求会传递到self.dispatch(),这里我就直接跳到self.dispatch代码
+```
+def dispatch(self, request, *args, **kwargs):
+    """
+    # APIView.dispatch
+    `.dispatch()` is pretty much the same as Django's regular dispatch,
+    but with extra hooks for startup, finalize, and exception handling.
+    """
+    self.args = args
+    self.kwargs = kwargs
+    request = self.initialize_request(request, *args, **kwargs)   # 这里会先对数据封装
+    self.request = request
+    self.headers = self.default_response_headers  # deprecate?
+    # 代码还有，略...
+    
+    try:
+        self.initial(request, *args, **kwargs)   # 这里会对前面封装的数据作进一步处理
+```
+
+我们先来看一下`self.initialize_request(request, *args, **kwargs)`对数据的处理
+```
+def initialize_request(self, request, *args, **kwargs):
+    """
+    Returns the initial request object.
+    """
+    parser_context = self.get_parser_context(request)
+
+    return Request(
+        request,
+        parsers=self.get_parsers(),
+        authenticators=self.get_authenticators(),   # 认证相关
+        negotiator=self.get_content_negotiator(),
+        parser_context=parser_context
+    )
+```
+
+这里可以看到request.authenticators=【authentication_classes实例化对象,...】,是一个列表，保存了`authentication_classes`实例化对象
+```
+def get_authenticators(self):
+    """
+    Instantiates and returns the list of authenticators that this view can use.
+    """
+    return [auth() for auth in self.authentication_classes]  
+```
+
+我们回来看一下`self.initial(request, *args, **kwargs)`对封装后的数据处理
+```
+def initial(self, request, *args, **kwargs):
+    """
+    Runs anything that needs to occur prior to calling the method handler.
+    """
+    self.format_kwarg = self.get_format_suffix(**kwargs)
+
+    # Perform content negotiation and store the accepted info on the request
+    neg = self.perform_content_negotiation(request)
+    request.accepted_renderer, request.accepted_media_type = neg
+
+    # Determine the API version, if versioning is in use.
+    version, scheme = self.determine_version(request, *args, **kwargs)
+    request.version, request.versioning_scheme = version, scheme
+
+    # Ensure that the incoming request is permitted
+    self.perform_authentication(request)     # 这里是处理认证相关
+    self.check_permissions(request)
+    self.check_throttles(request)
+```
+
+`self.perform_authentication(request)`处理函数如下
 ```
 class APIView(View):
     def perform_authentication(self, request):
@@ -193,19 +261,8 @@ class APIView(View):
         """
         request.user
 ```
-```
-class APIView(View):
-    def perform_authentication(self, request):
-        """
-        Perform authentication on the incoming request.
 
-        Note that if you override this and simply 'pass', then authentication
-        will instead be performed lazily, the first time either
-        `request.user` or `request.auth` is accessed.
-        """
-        request.user
-```
-
+来看下`reqeust.user`如何处理
 ```
 class Request(object):
     @property
@@ -216,9 +273,47 @@ class Request(object):
         """
         if not hasattr(self, '_user'):
             with wrap_attributeerrors():
-                self._authenticate()
+                self._authenticate()  # 会走这一步
         return self._user
 ```
+
+```
+class Request(object):
+    def _authenticate(self):
+        """
+        Attempt to authenticate the request using each authentication instance
+        in turn.
+        """
+        for authenticator in self.authenticators:
+            try:
+                user_auth_tuple = authenticator.authenticate(self)   # 执行authentication_classes对象.authenticate(self)方法
+            except exceptions.APIException:
+                self._not_authenticated()
+                raise
+
+            if user_auth_tuple is not None:
+                self._authenticator = authenticator   # authenticator就是authentication_classes对象
+                self.user, self.auth = user_auth_tuple # 对象.authenticate(self)方法返回元组分别赋值request.user,request.auth
+                return
+
+        self._not_authenticated()
+```
+
+从源码可以看出我们定义的认证类必须要有`authenticate`方法且返回元组，元组会分别赋值给request.user,request.auth，那么我们自己写的代码就有了如下
+
+```
+class MyAuthentication(BaseAuthentication):
+    def authenticate(self,request,*args,**kwargs):
+        token = request.query_params.get('token')
+        if not token:
+            raise  AuthenticationFailed("认证未携带")
+        token_obj = models.UserToken.objects.filter(token=token).first()
+        if not token_obj:
+            raise AuthenticationFailed("token己失效或错误")
+        return (token_obj.user.username,token_obj)
+```
+
+代码学习就该这样，这就牛逼多了，不言不合就仍给你代码...
 
 ### 三、总结
  * 用户提供用户名、密码post请求登录，通过后生成token入库并把token返回给用户
