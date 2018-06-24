@@ -33,7 +33,7 @@ url(r'^salary/$', views.SalaryView.as_view()),
 ```
 from rest_framework.permissions import BasePermission
 
-class UserPermission(BasePermission):
+class UserPermission(BasePermission):    # 普通用户都能查看
     def has_permission(self,request,view):
         print(request.auth)
         if getattr(request.auth, 'user', None):
@@ -43,7 +43,7 @@ class UserPermission(BasePermission):
         return False
 
 
-class BossPermission(BasePermission):
+class BossPermission(BasePermission):   # 老板才能查看
     def has_permission(self, request, view):
         print(request.auth)
         if getattr(request.auth, 'user', None):
@@ -56,7 +56,7 @@ class BossPermission(BasePermission):
 1.5 把定义的权限类用在业务视图上实现权限区分
 ```
 class SalaryView(APIView):
-    permission_classes = [UserPermission,BossPermission]
+    permission_classes = [UserPermission,BossPermission]  # 且的关系
     def get(self,request,*args,**kwargs):
         return HttpResponse("get salary 100W")
 ```
@@ -123,4 +123,8 @@ class APIView(View):
 
 ### 三、总结
 
+* rest_framework的权限依赖rest_framework的认证
+* rest_framework认证成功后返回认证用户的request.user,request.auth
+* rest_framework认证成功后不返回request.user,request.auth，那么就取不到值`request.auth.user.user_type`，所以用了getattr
+* 权限类必须要有`has_permission`方法，这个方法的返回值为True表示有权限，False表示没有权限
 
