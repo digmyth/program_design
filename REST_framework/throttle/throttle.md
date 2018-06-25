@@ -75,7 +75,7 @@ class UserRateThrottle(SimpleRateThrottle):   # __init__方法在父类SimpleRat
     authenticated.  For anonymous requests, the IP address of the request will
     be used.
     """
-    scope = 'user'
+    scope = 'user'  # 注意这里定义了
 
     def get_cache_key(self, request, view):
         if request.user.is_authenticated:
@@ -105,19 +105,38 @@ class SimpleRateThrottle(BaseThrottle):
     cache = default_cache
     timer = time.time
     cache_format = 'throttle_%(scope)s_%(ident)s'
-    scope = None
+    scope = None   # 这里是None，但不会找到这里，每次重头找
     THROTTLE_RATES = api_settings.DEFAULT_THROTTLE_RATES
 
     def __init__(self):
         if not getattr(self, 'rate', None):
-            self.rate = self.get_rate()
-        self.num_requests, self.duration = self.parse_rate(self.rate)
+            self.rate = self.get_rate()  # 执行get_rate()，记得从头找，其实self.rate=THROTTLE_RATES['user'],配置文件可以自定义了
+        self.num_requests, self.duration = self.parse_rate(self.rate)   # 执行.parse_rate()，记得从头找，把定义的rate传进去
 ```
 
 ```
+def get_rate(self):
+    """
+    Determine the string representation of the allowed request rate.
+    """
+    if not getattr(self, 'scope', None):
+        msg = ("You must set either `.scope` or `.rate` for '%s' throttle" %
+               self.__class__.__name__)
+        raise ImproperlyConfigured(msg)
 
+    try:
+        return self.THROTTLE_RATES[self.scope]  # 注意： self.scope='user'
+    except KeyError:
+        msg = "No default throttle rate set for '%s' scope" % self.scope
+        raise ImproperlyConfigured(msg)
 ```
-
+# settings.py
+```
+REST_FRAMEWORK = {
+    # ...
+    'THROTTLE_RATES':{'user': '3/m',},
+}
+```
 
  ### 三、总结
  
