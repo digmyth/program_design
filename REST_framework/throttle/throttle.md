@@ -65,7 +65,7 @@ class SalaryView(APIView):
         return HttpResponse("get salary 100W")
 ```
 
-`__init__`方法
+`__init__`方法,其实就是解析settings.py里定义的rate,分别赋值self.num_requests,self.duration
 ```
 class UserRateThrottle(SimpleRateThrottle):   # __init__方法在父类SimpleRateThrottle里
     """
@@ -136,6 +136,60 @@ REST_FRAMEWORK = {
     # ...
     'THROTTLE_RATES':{'user': '3/m',},
 }
+```
+
+实例化`__init__`方法后，执行throttle类UserRateThrottle的allow_request方法，没有就找父类的allow_request方法
+
+```
+class SimpleRateThrottle(BaseThrottle):
+    def allow_request(self, request, view):
+        """
+        Implement the check to see if the request should be throttled.
+
+        On success calls `throttle_success`.
+        On failure calls `throttle_failure`.
+        """
+        if self.rate is None:
+            return True
+
+        self.key = self.get_cache_key(request, view) # 主要执行UserRateThrottle类的get_cache_key(request, view)方法
+        if self.key is None:
+            return True
+
+        self.history = self.cache.get(self.key, [])
+        self.now = self.timer()
+
+        # Drop any requests from the history which have now passed the
+        # throttle duration
+        while self.history and self.history[-1] <= self.now - self.duration:
+            self.history.pop()
+        if len(self.history) >= self.num_requests:
+            return self.throttle_failure()
+        return self.throttle_success()
+```
+
+
+```
+class UserRateThrottle(SimpleRateThrottle):
+    """
+    Limits the rate of API calls that may be made by a given user.
+
+    The user id will be used as a unique cache key if the user is
+    authenticated.  For anonymous requests, the IP address of the request will
+    be used.
+    """
+    scope = 'user'
+
+    def get_cache_key(self, request, view):
+        if request.user.is_authenticated:   # 登录后的用户
+            ident = request.user.pk
+        else:
+            ident = self.get_ident(request)   # 没有登录的用户
+
+        return self.cache_format % {
+            'scope': self.scope,
+            'ident': ident
+        }
 ```
 
  ### 三、总结
