@@ -12,6 +12,76 @@ Rest_framework throttle用于用户访问频率限制，也称节流，如1分�
  
  每欠用户来访问时，用(当前时间戳-60秒),比这个时间戳还小的从列表中移除，以保证列表中记录保持在30个以内，大于30个时拒绝当前请求，这样就实现了访问频率限制
  
+ 那么问题来了，这个类似{'throttle_user_xx.pk':[1529831934.682146 ,1529831924.682146 ]}的东西放在哪里呢，其实是放在Django缓存里，这里方便起见，先放在file缓存里，其它缓存配置[参考](http://www.cnblogs.com/wupeiqi/articles/5246483.html)
+ 
+```
+# settings.py
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.filebased.FileBasedCache',
+        'LOCATION': 'E:\hrce-new\django_cache',
+    }
+}
+
+REST_FRAMEWORK = {
+    # ...
+    'DEFAULT_THROTTLE_RATES':{
+        'user': '3/m',
+    },
+
+}
+
+```
+ 
+视图函数自定义throttle类，这里相当于重写了原生`UserRateThrottle`类，并对`allow_request`进行了扩展，扩展依赖`authentication`,己在全局先前设定.根据用户类型的不同设定了不同的访问频率
+
+```
+from rest_framework.throttling import SimpleRateThrottle
+
+class UserRateThrottle(SimpleRateThrottle):
+    scope = 'user'
+
+    def get_cache_key(self, request, view):
+        if request.user:
+            ident = request.user
+
+        else:
+            ident = self.get_ident(request)
+
+        return self.cache_format % {
+            'scope': self.scope,
+            'ident': ident
+        }
+
+    def allow_request(self, request, view):
+        if request.auth.user.user_type == 1:
+            pass
+        else:
+            self.num_requests = 600  # 次数  # request.auth.user.user_type == 2 是管理员或老板
+            self.duration = 60     # 60s
+
+        return super(UserRateThrottle,self).allow_request(request,view)
+````
+
+视图函数使用自定义的throttle类
+```
+ class UserView(APIView):
+    # @csrf_exempt
+    # def dispatch(self,request, *args, **kwargs):
+    #     return super(UserView,self).dispatch(request,*args,**kwargs)
+
+    # versioning_class = URLPathVersioning
+    # authentication_classes = [MyAuthenticate,]
+    throttle_classes = [UserRateThrottle, ]
+
+    def get(self,request, *args,**kwargs):
+        self.dispatch
+        return HttpResponse('get.user')
+```
+
+这样写起来个人感觉良好...
+
+ 
 ### 二、Rest_framework throttle源码解析
   
 如你所知请求先到达self.dispath, 再依次往下疏理Rest_framework throttle处理流程，才能明白如何定义我们的throttle实现访问频率限制
