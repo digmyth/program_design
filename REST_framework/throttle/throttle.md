@@ -147,7 +147,7 @@ class UserRateThrottle(SimpleRateThrottle):   # __init__方法在父类SimpleRat
     """
     scope = 'user'  # 注意这里定义了
 
-    def get_cache_key(self, request, view):
+    def get_cache_key(self, request, view):  # 这里也就返回字串throttle_user_xx.pk,便于区分不同用户记录
         if request.user.is_authenticated:
             ident = request.user.pk
         else:
@@ -202,6 +202,7 @@ def get_rate(self):
 ```
 
 # settings.py
+那么就有了`DEFAULT_THROTTLE_RATES`这段代码定义
 ```
 REST_FRAMEWORK = {
     # ...
@@ -227,7 +228,7 @@ class SimpleRateThrottle(BaseThrottle):
         if self.key is None:
             return True
 
-        self.history = self.cache.get(self.key, [])
+        self.history = self.cache.get(self.key, [])  # cache其实就是用户记录的那个字典记录，我们写到缓存里了，所以会去缓存里读
         self.now = self.timer()
 
         # Drop any requests from the history which have now passed the
