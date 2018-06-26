@@ -106,7 +106,7 @@ class SimpleRateThrottle(BaseThrottle):
     timer = time.time
     cache_format = 'throttle_%(scope)s_%(ident)s'
     scope = None   # 这里是None，但不会找到这里，每次重头找
-    THROTTLE_RATES = api_settings.DEFAULT_THROTTLE_RATES
+    THROTTLE_RATES = api_settings.DEFAULT_THROTTLE_RATES  # 会在settings.py配置文件里找DEFAULT_THROTTLE_RATES
 
     def __init__(self):
         if not getattr(self, 'rate', None):
@@ -130,11 +130,12 @@ def get_rate(self):
         msg = "No default throttle rate set for '%s' scope" % self.scope
         raise ImproperlyConfigured(msg)
 ```
+
 # settings.py
 ```
 REST_FRAMEWORK = {
     # ...
-    'THROTTLE_RATES':{'user': '3/m',},
+    'DEFAULT_THROTTLE_RATES':{'user': '3/m',},
 }
 ```
 
