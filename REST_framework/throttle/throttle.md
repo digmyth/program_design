@@ -264,7 +264,50 @@ class UserRateThrottle(SimpleRateThrottle):
         }
 ```
 
+```
+class SimpleRateThrottle(BaseThrottle):
+    def allow_request(self, request, view):
+        """
+        Implement the check to see if the request should be throttled.
+
+        On success calls `throttle_success`.
+        On failure calls `throttle_failure`.
+        """
+        if self.rate is None:
+            return True
+
+        self.key = self.get_cache_key(request, view)  # throttle_user_userpk
+        if self.key is None:
+            return True
+
+        self.history = self.cache.get(self.key, [])   # 获取列表
+        self.now = self.timer()
+
+        # Drop any requests from the history which have now passed the
+        # throttle duration
+        while self.history and self.history[-1] <= self.now - self.duration:  # 列表中最后的那个时间戳-时间，作比较
+            self.history.pop()  # 去掉时间较早的
+        if len(self.history) >= self.num_requests:  # 达到上限就拒绝请求
+            return self.throttle_failure()
+        return self.throttle_success() # 否则请求成功
+```
+
+```
+class SimpleRateThrottle(BaseThrottle):
+    def throttle_success(self):
+        """
+        Inserts the current request's timestamp along with the key
+        into the cache.
+        """
+        self.history.insert(0, self.now)  # 请求成功添加此次记录
+        self.cache.set(self.key, self.history, self.duration)  # 更新字典记录
+        return True
+```
+
  ### 三、总结
+ *　认证用户根据用户类型或用户pk区分不同频率控制
+ *　匿名用户根据客户端地址区分不同频率控制
+ ×　访问频率控制不应该设在全局，应该部份URL或视图函数受限
  
  
  
